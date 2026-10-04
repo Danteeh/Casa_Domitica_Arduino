@@ -193,6 +193,17 @@ void enviarDHT() {
   float t = dht.readTemperature();
   if (isnan(h) || isnan(t)) {
     Serial.println(F("ERROR_DHT"));
+    enviarLinea("DHT_ERR:1");
+    return;
+  }
+  // Rechazar lecturas imposibles en ambiente (sensor mal conectado o sin
+  // pull-up suele devolver un valor fijo tipo 82.4 C / 10% ). Un DHT22 real
+  // mide -40..80 C; en una casa jamas pasa de ~45 C. Si sale fuera de rango
+  // NO lo mandamos como dato bueno: avisamos error en su lugar.
+  if (t < -10 || t > 60 || h < 1 || h > 100) {
+    Serial.print(F("DHT lectura sospechosa descartada: "));
+    Serial.print(t); Serial.print(F(" C  ")); Serial.print(h); Serial.println(F(" %"));
+    enviarLinea("DHT_ERR:1");
     return;
   }
   enviarLinea("TEMP:" + String(t, 1) + ",HUM:" + String(h, 1));

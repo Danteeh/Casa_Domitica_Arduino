@@ -136,6 +136,13 @@
       return;
     }
 
+    // DHT_ERR:1  -> el sensor no da lectura valida
+    if (/DHT_ERR:\s*1/i.test(line)) {
+      el.temp.textContent = "err";
+      el.hum.textContent = "err";
+      return;
+    }
+
     // AGUA:72  (sin ancla ^ para tolerar fragmentos pegados)
     if ((m = line.match(/AGUA:\s*(\d+)/i)) && !/AGUA_ALERTA/i.test(line)) {
       const pct = +m[1];
