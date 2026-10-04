@@ -130,14 +130,14 @@
     let m;
 
     // TEMP:28.5,HUM:44.4
-    if ((m = line.match(/TEMP:([-\d.]+),HUM:([-\d.]+)/i))) {
+    if ((m = line.match(/TEMP:\s*([-\d.]+)\s*,\s*HUM:\s*([-\d.]+)/i))) {
       el.temp.textContent = m[1];
       el.hum.textContent = m[2];
       return;
     }
 
-    // AGUA:72
-    if ((m = line.match(/^AGUA:(\d+)/i))) {
+    // AGUA:72  (sin ancla ^ para tolerar fragmentos pegados)
+    if ((m = line.match(/AGUA:\s*(\d+)/i)) && !/AGUA_ALERTA/i.test(line)) {
       const pct = +m[1];
       el.waterPct.textContent = pct;
       el.waterFill.style.height = pct + "%";
@@ -148,14 +148,14 @@
     }
 
     // AGUA_ALERTA:1 / :0
-    if ((m = line.match(/^AGUA_ALERTA:([01])/i))) {
+    if ((m = line.match(/AGUA_ALERTA:\s*([01])/i))) {
       if (m[1] === "1") showAlert("ALERTA: el tanque se va a desbordar");
       else hideAlert();
       return;
     }
 
     // PIR:1 / :0
-    if ((m = line.match(/^PIR:([01])/i))) {
+    if ((m = line.match(/PIR:\s*([01])/i))) {
       const mov = m[1] === "1";
       el.pirState.textContent = mov ? "MOVIMIENTO DETECTADO" : "Sin movimiento";
       el.pirDot.classList.toggle("pir__dot--active", mov);
@@ -168,31 +168,33 @@
     }
 
     // LDR:1 / :0
-    if ((m = line.match(/^LDR:([01])/i))) {
+    if ((m = line.match(/LDR:\s*([01])/i))) {
       el.ldrState.textContent = m[1] === "1" ? "Poca luz" : "Luz suficiente";
       return;
     }
 
     // LUZAUTO:1 / :0
-    if ((m = line.match(/^LUZAUTO:([01])/i))) {
+    if ((m = line.match(/LUZAUTO:\s*([01])/i))) {
       el.luzAutoState.textContent = m[1] === "1" ? "Encendido" : "Apagado";
       return;
     }
 
     // ACK,L,3,1  /  ACK,P,1,1  /  ACK,AUTO,1
-    if ((m = line.match(/^ACK,L,(\d+),([01])/i))) {
+    if ((m = line.match(/ACK,\s*L,\s*(\d+),\s*([01])/i))) {
       const n = +m[1];
-      ledState[n - 1] = m[2] === "1";
-      renderLed(n);
+      if (n >= 1 && n <= NUM_LEDS) {
+        ledState[n - 1] = m[2] === "1";
+        renderLed(n);
+      }
       return;
     }
-    if ((m = line.match(/^ACK,P,([12]),([01])/i))) {
+    if ((m = line.match(/ACK,\s*P,\s*([12]),\s*([01])/i))) {
       const estado = m[2] === "1" ? "Abierta" : "Cerrada";
       if (m[1] === "1") el.door1State.textContent = estado;
       else el.door2State.textContent = estado;
       return;
     }
-    if ((m = line.match(/^ACK,AUTO,([01])/i))) {
+    if ((m = line.match(/ACK,\s*AUTO,\s*([01])/i))) {
       el.autoToggle.checked = m[1] === "1";
       return;
     }

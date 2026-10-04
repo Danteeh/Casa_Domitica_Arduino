@@ -100,13 +100,15 @@
 
         await BluetoothSerial.connect({ address });
 
-        // Escuchar lineas entrantes (el plugin corta por el delimiter).
+        // Escuchar datos entrantes. NO confiamos en que el plugin entregue
+        // lineas perfectas: acumulamos en feed() y cortamos por '\n'.
+        // El plugin consume el delimitador al cortar, asi que se lo
+        // devolvemos para que feed() siempre vea el fin de linea.
         readListener = await BluetoothSerial.addListener("onRead", (data) => {
           const value = (data && data.value) || "";
-          // Puede venir sin el '\n' final; lo normalizamos por si acaso.
-          String(value)
-            .split(/\r?\n/)
-            .forEach((part) => emitLine(part));
+          let s = String(value);
+          if (!s.endsWith("\n")) s += "\n";
+          feed(s);
         });
 
         await BluetoothSerial.startNotifications({ address, delimiter: DELIM });
