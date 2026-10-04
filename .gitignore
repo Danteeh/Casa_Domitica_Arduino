@@ -1,0 +1,19 @@
+# Dependencias
+node_modules/
+
+# Proyecto Android generado por Capacitor (lo regenera el CI con cap add android)
+android/
+
+# Build / salidas
+*.apk
+dist/
+build/
+
+# Capacitor
+.capacitor/
+
+# Editor / SO
+.DS_Store
+Thumbs.db
+.vscode/
+*.log

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Casa Domotica</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Casa Domotica</h1>
+    <div id="status" class="status status--off">
+      <span class="dot"></span>
+      <span id="statusText">Desconectado</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Conexion -->
+    <section class="card">
+      <h2>Conexion</h2>
+      <div class="row">
+        <select id="devices" class="select"></select>
+        <button id="btnRefresh" class="btn btn--ghost">Buscar</button>
+      </div>
+      <div class="row">
+        <button id="btnConnect" class="btn btn--primary">Conectar</button>
+        <button id="btnDisconnect" class="btn btn--ghost" disabled>Desconectar</button>
+      </div>
+      <p id="mode" class="hint"></p>
+    </section>
+
+    <!-- Sensores -->
+    <section class="card">
+      <h2>Sensores</h2>
+      <div class="sensors">
+        <div class="sensor">
+          <div class="sensor__label">Temperatura</div>
+          <div class="sensor__value"><span id="temp">--</span> <small>&deg;C</small></div>
+        </div>
+        <div class="sensor">
+          <div class="sensor__label">Humedad</div>
+          <div class="sensor__value"><span id="hum">--</span> <small>%</small></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LED (prueba minima) -->
+    <section class="card">
+      <h2>LED (pin 12)</h2>
+      <div class="row">
+        <button id="btnLedOn" class="btn btn--on" disabled>Encender</button>
+        <button id="btnLedOff" class="btn btn--off" disabled>Apagar</button>
+      </div>
+      <div class="led-state">
+        Estado: <strong id="ledState">desconocido</strong>
+      </div>
+    </section>
+
+    <!-- Consola cruda -->
+    <section class="card">
+      <h2>Consola</h2>
+      <pre id="log" class="log"></pre>
+    </section>
+  </main>
+
+  <script src="ble.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

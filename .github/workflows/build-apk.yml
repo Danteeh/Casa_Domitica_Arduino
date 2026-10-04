@@ -1,0 +1,55 @@
+name: Build Android APK
+
+# Compila el APK de la app Capacitor en la nube.
+# Se dispara al hacer push a main, o manualmente desde la pestana Actions.
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Add Android platform (si no existe)
+        run: npx cap add android || echo "La plataforma android ya existe, continuo"
+
+      - name: Inject Bluetooth permissions into AndroidManifest
+        run: node scripts/patch-manifest.js
+
+      - name: Sync web assets + plugins
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: casa-domotica-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
