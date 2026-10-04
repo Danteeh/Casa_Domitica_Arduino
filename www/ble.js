@@ -144,26 +144,59 @@
   }
 
   // -------------------------------------------------------------------------
-  // Implementacion SIMULADA (navegador de escritorio) - Arduino falso
+  // Implementacion SIMULADA (navegador de escritorio) - Arduino falso completo
   // -------------------------------------------------------------------------
   function makeSim() {
-    let connected = false;
     let timer = null;
-    let ledOn = false;
     let temp = 28.5;
     let hum = 44.4;
+    let agua = 60;
+    let aguaSubiendo = true;
+    let aguaAlerta = false;
+    let modoAuto = true;
+    let ldrPoca = false;
+    let luzAuto = false;
+    let tick = 0;
 
     function startTelemetry() {
       stopTelemetry();
       timer = setInterval(() => {
-        // Pequena deriva aleatoria para que se vea "vivo".
+        tick++;
+
+        // Ambiente
         temp = +(temp + (Math.random() - 0.5) * 0.4).toFixed(1);
         hum = +(hum + (Math.random() - 0.5) * 0.6).toFixed(1);
-        if (temp < 20) temp = 20;
-        if (temp > 35) temp = 35;
-        if (hum < 30) hum = 30;
-        if (hum > 70) hum = 70;
+        temp = Math.min(35, Math.max(20, temp));
+        hum = Math.min(70, Math.max(30, hum));
         feed(`TEMP:${temp.toFixed(1)},HUM:${hum.toFixed(1)}\n`);
+
+        // Agua: sube y baja despacio para probar el umbral de desborde
+        agua += aguaSubiendo ? 4 : -4;
+        if (agua >= 100) { agua = 100; aguaSubiendo = false; }
+        if (agua <= 20) { agua = 20; aguaSubiendo = true; }
+        feed(`AGUA:${Math.round(agua)}\n`);
+        const alerta = agua >= 95;
+        if (alerta !== aguaAlerta) {
+          aguaAlerta = alerta;
+          feed(`AGUA_ALERTA:${alerta ? 1 : 0}\n`);
+        }
+
+        // LDR: alterna poca/mucha luz cada ~10 s para ver el modo auto
+        if (tick % 5 === 0) {
+          ldrPoca = !ldrPoca;
+          feed(`LDR:${ldrPoca ? 1 : 0}\n`);
+          if (modoAuto) {
+            luzAuto = ldrPoca;
+            feed(`LUZAUTO:${luzAuto ? 1 : 0}\n`);
+          }
+        }
+
+        // PIR: pulso de movimiento ocasional
+        if (tick % 7 === 0) {
+          feed("PIR:1\n");
+          feed("LUZAUTO:1\n");
+          setTimeout(() => feed("PIR:0\n"), 1500);
+        }
       }, 2000);
     }
     function stopTelemetry() {
@@ -175,33 +208,34 @@
       isNative: () => false,
 
       async list() {
-        return [
-          { name: "HC-05 (simulado)", address: "00:00:00:00:00:00" },
-        ];
+        return [{ name: "HC-05 (simulado)", address: "00:00:00:00:00:00" }];
       },
 
       async connect() {
-        connected = true;
         emitStatus(true);
         feed("Sistema iniciado\n");
         startTelemetry();
       },
 
       async disconnect() {
-        connected = false;
         stopTelemetry();
         emitStatus(false);
       },
 
       async send(text) {
-        // Simula el parser del Arduino.
+        // Emula el parser del firmware real.
         const cmd = text.trim();
-        if (cmd === "E,12") {
-          ledOn = true;
-          feed("LED 12 ENCENDIDO\n");
-        } else if (cmd === "A,12") {
-          ledOn = false;
-          feed("LED 12 APAGADO\n");
+        let m;
+        if ((m = cmd.match(/^L,(\d+),([01])$/))) {
+          feed(`ACK,L,${m[1]},${m[2]}\n`);
+        } else if ((m = cmd.match(/^P,([12]),([01])$/))) {
+          feed(`ACK,P,${m[1]},${m[2]}\n`);
+        } else if ((m = cmd.match(/^AUTO,([01])$/))) {
+          modoAuto = m[1] === "1";
+          feed(`ACK,AUTO,${m[1]}\n`);
+          if (!modoAuto) { luzAuto = false; feed("LUZAUTO:0\n"); }
+        } else if (cmd === "PING") {
+          feed("PONG\n");
         }
       },
 

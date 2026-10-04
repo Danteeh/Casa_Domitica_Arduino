@@ -15,10 +15,41 @@ App Inventor. Conserva el mismo protocolo serie.
   lineas) con el MISMO protocolo que tu version anterior.
 - `capacitor.config.json`, `package.json` - configuracion de Capacitor.
 
-## Protocolo (sin cambios respecto a App Inventor)
+## Protocolo (firmware <-> app)
 
-- App -> Arduino:  `E,12` (LED on), `A,12` (LED off)  -- cada comando con `\n`
-- Arduino -> App:  `TEMP:28.5,HUM:44.4`
+App -> Arduino (cada comando termina en `\n`):
+- `L,<n>,<0|1>`   LED manual n (1..5).  Ej: `L,3,1` enciende el LED 3.
+- `P,<p>,<0|1>`   Servo p (1=puerta principal, 2=garaje). 1=abrir, 0=cerrar.
+- `AUTO,<0|1>`    Activa/desactiva el modo automatico del LDR.
+- `PING`          El Arduino responde `PONG` (prueba de enlace).
+
+Arduino -> App:
+- `TEMP:28.5,HUM:44.4`   Telemetria DHT22.
+- `AGUA:72`              Nivel de agua en %.
+- `AGUA_ALERTA:1|0`      Alerta de desbordamiento.
+- `PIR:1|0`              Movimiento detectado / ceso.
+- `LDR:1|0`              Poca luz / luz suficiente.
+- `LUZAUTO:1|0`          Estado del LED automatico (ultimo piso).
+- `ACK,L,3,1`            Confirmacion de que un comando se aplico.
+
+## Firmware y librerias
+
+`arduino/casa_domotica/casa_domotica.ino` necesita dos librerias (instalalas
+desde el Gestor de Librerias del IDE de Arduino):
+- **DHT sensor library** (de Adafruit) + su dependencia **Adafruit Unified Sensor**.
+- **Servo** (viene con el IDE).
+
+Las conexiones fisicas de TODOS los componentes estan en
+`docs/CONEXIONES.md` (tabla de pines, divisores, alimentacion de servos, BOM).
+
+## Sketches de prueba por sensor
+
+Antes de montar todo junto, prueba y calibra cada sensor por separado con los
+sketches en `arduino/pruebas/`:
+- `test_ldr/test_ldr.ino`     - calibra el umbral de luz del LDR.
+- `test_agua/test_agua.ino`   - calibra el 0-100% del nivel de agua.
+- `test_pir/test_pir.ino`     - verifica el PIR (dale 60 s para estabilizar).
+- `test_servos/test_servos.ino` - ajusta los angulos de puerta y garaje.
 
 ## 1) Probar la interfaz en el PC (sin hardware)
 

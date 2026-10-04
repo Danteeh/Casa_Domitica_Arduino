@@ -16,6 +16,9 @@
     </div>
   </header>
 
+  <!-- Banner de alerta (agua / movimiento) -->
+  <div id="alertBanner" class="alert-banner" hidden></div>
+
   <main>
     <!-- Conexion -->
     <section class="card">
@@ -31,9 +34,9 @@
       <p id="mode" class="hint"></p>
     </section>
 
-    <!-- Sensores -->
+    <!-- Sensores ambientales -->
     <section class="card">
-      <h2>Sensores</h2>
+      <h2>Ambiente</h2>
       <div class="sensors">
         <div class="sensor">
           <div class="sensor__label">Temperatura</div>
@@ -46,15 +49,73 @@
       </div>
     </section>
 
-    <!-- LED (prueba minima) -->
+    <!-- Nivel de agua -->
     <section class="card">
-      <h2>LED (pin 12)</h2>
-      <div class="row">
-        <button id="btnLedOn" class="btn btn--on" disabled>Encender</button>
-        <button id="btnLedOff" class="btn btn--off" disabled>Apagar</button>
+      <h2>Nivel de agua</h2>
+      <div class="water">
+        <div class="water__bar">
+          <div id="waterFill" class="water__fill" style="height:0%"></div>
+        </div>
+        <div class="water__info">
+          <div class="water__pct"><span id="waterPct">--</span><small>%</small></div>
+          <div id="waterState" class="water__state">--</div>
+        </div>
       </div>
-      <div class="led-state">
-        Estado: <strong id="ledState">desconocido</strong>
+    </section>
+
+    <!-- Iluminacion -->
+    <section class="card">
+      <h2>Iluminacion</h2>
+      <div id="leds" class="leds"></div>
+      <div class="divider"></div>
+      <div class="auto-row">
+        <div>
+          <div class="auto-title">Luz automatica (ultimo piso)</div>
+          <div class="hint">Controlada por el sensor de luz (LDR)</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="autoToggle" checked disabled />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="auto-status">
+        <span>Sensor LDR: <strong id="ldrState">--</strong></span>
+        <span>LED auto: <strong id="luzAutoState">--</strong></span>
+      </div>
+    </section>
+
+    <!-- Puertas / servos -->
+    <section class="card">
+      <h2>Puertas</h2>
+      <div class="doors">
+        <div class="door">
+          <div class="door__name">Puerta principal</div>
+          <div class="row">
+            <button class="btn btn--on door-open" data-door="1" disabled>Abrir</button>
+            <button class="btn btn--off door-close" data-door="1" disabled>Cerrar</button>
+          </div>
+          <div class="door__state">Estado: <strong id="door1State">--</strong></div>
+        </div>
+        <div class="door">
+          <div class="door__name">Garaje</div>
+          <div class="row">
+            <button class="btn btn--on door-open" data-door="2" disabled>Abrir</button>
+            <button class="btn btn--off door-close" data-door="2" disabled>Cerrar</button>
+          </div>
+          <div class="door__state">Estado: <strong id="door2State">--</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Seguridad / PIR -->
+    <section class="card">
+      <h2>Seguridad</h2>
+      <div class="pir">
+        <div id="pirDot" class="pir__dot"></div>
+        <div>
+          <div class="pir__state" id="pirState">Sin movimiento</div>
+          <div class="hint" id="pirTime">--</div>
+        </div>
       </div>
     </section>
 
