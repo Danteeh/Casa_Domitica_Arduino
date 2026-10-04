@@ -127,41 +127,39 @@
   // ---------- Parseo de las lineas del Arduino ----------
   function handleLine(line) {
     log(line, "rx");
+
+    // IMPORTANTE: no hacemos "return" tras el primer match. Si una rafaga
+    // llega con varios mensajes pegados (ej. "DHT_ERR:1AGUA:42"), hay que
+    // procesarlos TODOS; antes el primer token hacia return y el agua
+    // (que siempre venia detras del DHT) nunca se pintaba.
     let m;
 
-    // TEMP:28.5,HUM:44.4
+    // --- Temperatura / humedad ---
     if ((m = line.match(/TEMP:\s*([-\d.]+)\s*,\s*HUM:\s*([-\d.]+)/i))) {
       el.temp.textContent = m[1];
       el.hum.textContent = m[2];
-      return;
-    }
-
-    // DHT_ERR:1  -> el sensor no da lectura valida
-    if (/DHT_ERR:\s*1/i.test(line)) {
+    } else if (/DHT_ERR:\s*1/i.test(line)) {
       el.temp.textContent = "err";
       el.hum.textContent = "err";
-      return;
     }
 
-    // AGUA:72  (sin ancla ^ para tolerar fragmentos pegados)
-    if ((m = line.match(/AGUA:\s*(\d+)/i)) && !/AGUA_ALERTA/i.test(line)) {
+    // --- Nivel de agua (independiente del DHT) ---
+    if ((m = line.match(/\bAGUA:\s*(\d+)/i))) {
       const pct = +m[1];
       el.waterPct.textContent = pct;
       el.waterFill.style.height = pct + "%";
       el.waterFill.classList.toggle("water__fill--high", pct >= 80);
       el.waterState.textContent =
         pct >= 95 ? "DESBORDE" : pct >= 80 ? "Lleno" : "Normal";
-      return;
     }
 
-    // AGUA_ALERTA:1 / :0
+    // --- Alerta de desbordamiento ---
     if ((m = line.match(/AGUA_ALERTA:\s*([01])/i))) {
       if (m[1] === "1") showAlert("ALERTA: el tanque se va a desbordar");
       else hideAlert();
-      return;
     }
 
-    // PIR:1 / :0
+    // --- PIR ---
     if ((m = line.match(/PIR:\s*([01])/i))) {
       const mov = m[1] === "1";
       el.pirState.textContent = mov ? "MOVIMIENTO DETECTADO" : "Sin movimiento";
@@ -171,39 +169,37 @@
         showAlert("Movimiento detectado");
         setTimeout(hideAlert, 4000);
       }
-      return;
     }
 
-    // LDR:1 / :0
+    // --- LDR ---
     if ((m = line.match(/LDR:\s*([01])/i))) {
       el.ldrState.textContent = m[1] === "1" ? "Poca luz" : "Luz suficiente";
-      return;
     }
 
-    // LUZAUTO:1 / :0
+    // --- LED automatico ---
     if ((m = line.match(/LUZAUTO:\s*([01])/i))) {
       el.luzAutoState.textContent = m[1] === "1" ? "Encendido" : "Apagado";
-      return;
     }
 
-    // ACK,L,3,1  /  ACK,P,1,1  /  ACK,AUTO,1
+    // --- ACK de LED ---
     if ((m = line.match(/ACK,\s*L,\s*(\d+),\s*([01])/i))) {
       const n = +m[1];
       if (n >= 1 && n <= NUM_LEDS) {
         ledState[n - 1] = m[2] === "1";
         renderLed(n);
       }
-      return;
     }
+
+    // --- ACK de servo ---
     if ((m = line.match(/ACK,\s*P,\s*([12]),\s*([01])/i))) {
       const estado = m[2] === "1" ? "Abierta" : "Cerrada";
       if (m[1] === "1") el.door1State.textContent = estado;
       else el.door2State.textContent = estado;
-      return;
     }
+
+    // --- ACK de modo auto ---
     if ((m = line.match(/ACK,\s*AUTO,\s*([01])/i))) {
       el.autoToggle.checked = m[1] === "1";
-      return;
     }
   }
 
