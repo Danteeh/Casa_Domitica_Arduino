@@ -100,15 +100,12 @@
 
         await BluetoothSerial.connect({ address });
 
-        // Escuchar datos entrantes. NO confiamos en que el plugin entregue
-        // lineas perfectas: acumulamos en feed() y cortamos por '\n'.
-        // El plugin consume el delimitador al cortar, asi que se lo
-        // devolvemos para que feed() siempre vea el fin de linea.
+        // Escuchar datos entrantes. El firmware ahora termina cada mensaje
+        // con un unico '\n'. Pasamos el valor CRUDO al buffer, que acumula y
+        // corta por '\n'; emitLine() hace trim() y limpia cualquier '\r'.
         readListener = await BluetoothSerial.addListener("onRead", (data) => {
           const value = (data && data.value) || "";
-          let s = String(value);
-          if (!s.endsWith("\n")) s += "\n";
-          feed(s);
+          feed(String(value) + "\n");
         });
 
         await BluetoothSerial.startNotifications({ address, delimiter: DELIM });

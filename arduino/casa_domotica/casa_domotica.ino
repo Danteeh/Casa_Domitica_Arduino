@@ -260,6 +260,13 @@ void revisarPIR() {
 //  SALIDA (envia por Bluetooth y por el monitor serie)
 // ===========================================================================
 void enviarLinea(const String &s) {
-  Serial1.println(s);
+  // Al Bluetooth: terminamos SOLO con '\n' (sin '\r').
+  // El '\r' de println() dejaba un caracter colgando que corrompia el
+  // inicio de la linea siguiente (llegaba "MP:" en vez de "TEMP:").
+  Serial1.print(s);
+  Serial1.print('\n');
+  Serial1.flush();            // asegura que la trama salga completa
+
+  // Al monitor serie: println normal, para leerlo comodo.
   Serial.println(s);
 }
