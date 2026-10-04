@@ -52,14 +52,12 @@
     <!-- Nivel de agua -->
     <section class="card">
       <h2>Nivel de agua</h2>
-      <div class="water">
-        <div class="water__bar">
-          <div id="waterFill" class="water__fill" style="height:0%"></div>
-        </div>
-        <div class="water__info">
-          <div class="water__pct"><span id="waterPct">--</span><small>%</small></div>
-          <div id="waterState" class="water__state">--</div>
-        </div>
+      <div class="water-pct-big">
+        <span id="waterPct">--</span><small>%</small>
+      </div>
+      <div id="waterState" class="water-state-big">Sin datos</div>
+      <div class="water__bar water__bar--h">
+        <div id="waterFill" class="water__fill water__fill--h" style="width:0%"></div>
       </div>
     </section>
 

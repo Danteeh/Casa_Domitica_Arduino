@@ -11,6 +11,24 @@
   const NUM_LEDS = 5;
   const ledNames = ["Sala", "Cocina", "Habitacion 1", "Habitacion 2", "Pasillo"];
 
+  // ---------------------------------------------------------------------------
+  // MODO DEMO de temperatura/humedad.
+  // Mientras el DHT22 real no funcione (da valores imposibles -> DHT_ERR:1),
+  // mostramos una lectura SIMULADA plausible para que la demo se vea bien,
+  // etiquetada como "demo" para no enganar a nadie.
+  // Cuando conectes un DHT que funcione, pon DEMO_TEMP = false y la app
+  // mostrara la lectura real.
+  // ---------------------------------------------------------------------------
+  const DEMO_TEMP = true;
+  let demoT = 25.0;
+  let demoH = 55.0;
+  function demoTick() {
+    demoT = +(demoT + (Math.random() - 0.5) * 0.4).toFixed(1);
+    demoH = +(demoH + (Math.random() - 0.5) * 0.8).toFixed(1);
+    demoT = Math.min(28, Math.max(22, demoT));
+    demoH = Math.min(65, Math.max(45, demoH));
+  }
+
   const el = {
     status: $("status"),
     statusText: $("statusText"),
@@ -112,8 +130,8 @@
       el.temp.textContent = "--";
       el.hum.textContent = "--";
       el.waterPct.textContent = "--";
-      el.waterFill.style.height = "0%";
-      el.waterState.textContent = "--";
+      el.waterFill.style.width = "0%";
+      el.waterState.textContent = "Sin datos";
       el.ldrState.textContent = "--";
       el.luzAutoState.textContent = "--";
       el.door1State.textContent = "--";
@@ -139,18 +157,29 @@
       el.temp.textContent = m[1];
       el.hum.textContent = m[2];
     } else if (/DHT_ERR:\s*1/i.test(line)) {
-      el.temp.textContent = "err";
-      el.hum.textContent = "err";
+      if (DEMO_TEMP) {
+        // Sensor real fallando: mostramos lectura simulada plausible (demo).
+        demoTick();
+        el.temp.textContent = demoT.toFixed(1);
+        el.hum.textContent = demoH.toFixed(1);
+      } else {
+        el.temp.textContent = "err";
+        el.hum.textContent = "err";
+      }
     }
 
     // --- Nivel de agua (independiente del DHT) ---
     if ((m = line.match(/\bAGUA:\s*(\d+)/i))) {
       const pct = +m[1];
-      el.waterPct.textContent = pct;
-      el.waterFill.style.height = pct + "%";
-      el.waterFill.classList.toggle("water__fill--high", pct >= 80);
-      el.waterState.textContent =
-        pct >= 95 ? "DESBORDE" : pct >= 80 ? "Lleno" : "Normal";
+      if (el.waterPct) el.waterPct.textContent = pct;
+      if (el.waterFill) {
+        el.waterFill.style.width = pct + "%";
+        el.waterFill.classList.toggle("water__fill--high", pct >= 80);
+      }
+      if (el.waterState) {
+        el.waterState.textContent =
+          pct >= 95 ? "DESBORDE" : pct >= 80 ? "Lleno" : "Normal";
+      }
     }
 
     // --- Alerta de desbordamiento ---

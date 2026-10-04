@@ -298,3 +298,33 @@ main {
   0%, 100% { box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.25); }
   50% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0.1); }
 }
+
+/* ---------- Nivel de agua: vista de porcentaje grande ---------- */
+.water-pct-big {
+  text-align: center;
+  font-size: 3.2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #38bdf8;
+}
+.water-pct-big small {
+  font-size: 1.4rem;
+  color: var(--muted);
+  margin-left: 4px;
+}
+.water-state-big {
+  text-align: center;
+  color: var(--muted);
+  margin: 6px 0 14px;
+  font-weight: 600;
+}
+.water__bar--h {
+  width: 100%;
+  height: 18px;
+  display: block;
+}
+.water__fill--h {
+  height: 100%;
+  width: 0%;
+  transition: width 0.5s ease;
+}
