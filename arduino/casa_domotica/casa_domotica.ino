@@ -271,12 +271,14 @@ void revisarPIR() {
 //  SALIDA (envia por Bluetooth y por el monitor serie)
 // ===========================================================================
 void enviarLinea(const String &s) {
-  // Al Bluetooth: terminamos SOLO con '\n' (sin '\r').
-  // El '\r' de println() dejaba un caracter colgando que corrompia el
-  // inicio de la linea siguiente (llegaba "MP:" en vez de "TEMP:").
+  // Al Bluetooth: anteponemos un '*' SACRIFICABLE y cerramos con '\n'.
+  // El HC-05 suele comerse el PRIMER byte de cada trama tras un instante
+  // de inactividad (por eso llegaba "gua:" en vez de "AGUA:"). Con el '*'
+  // delante, lo que se pierde es el '*' y el mensaje real llega intacto.
+  Serial1.print('*');
   Serial1.print(s);
   Serial1.print('\n');
-  Serial1.flush();            // asegura que la trama salga completa
+  Serial1.flush();
 
   // Al monitor serie: println normal, para leerlo comodo.
   Serial.println(s);

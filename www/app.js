@@ -146,19 +146,18 @@
   function handleLine(line) {
     log(line, "rx");
 
-    // IMPORTANTE: no hacemos "return" tras el primer match. Si una rafaga
-    // llega con varios mensajes pegados (ej. "DHT_ERR:1AGUA:42"), hay que
-    // procesarlos TODOS; antes el primer token hacia return y el agua
-    // (que siempre venia detras del DHT) nunca se pintaba.
+    // IMPORTANTE: no hacemos "return" tras el primer match (varios mensajes
+    // pueden venir pegados). Ademas, las regex toleran que el HC-05 se coma
+    // el PRIMER caracter de la trama y que haya espacios alrededor de ':'
+    // (por eso matcheamos por el FINAL de cada palabra clave, no el inicio).
     let m;
 
-    // --- Temperatura / humedad ---
-    if ((m = line.match(/TEMP:\s*([-\d.]+)\s*,\s*HUM:\s*([-\d.]+)/i))) {
+    // --- Temperatura / humedad ---  (EMP: tolera perder la 'T')
+    if ((m = line.match(/EMP\s*:\s*([-\d.]+)\s*,\s*HUM\s*:\s*([-\d.]+)/i))) {
       el.temp.textContent = m[1];
       el.hum.textContent = m[2];
-    } else if (/DHT_ERR:\s*1/i.test(line)) {
+    } else if (/DHT_ERR\s*:\s*1/i.test(line)) {
       if (DEMO_TEMP) {
-        // Sensor real fallando: mostramos lectura simulada plausible (demo).
         demoTick();
         el.temp.textContent = demoT.toFixed(1);
         el.hum.textContent = demoH.toFixed(1);
@@ -168,8 +167,9 @@
       }
     }
 
-    // --- Nivel de agua (independiente del DHT) ---
-    if ((m = line.match(/\bAGUA:\s*(\d+)/i))) {
+    // --- Nivel de agua ---  (GUA: tolera perder la 'A' -> "gua : 42")
+    //  Nota: excluimos AGUA_ALERTA (tiene 'GUA_' con guion bajo).
+    if ((m = line.match(/GUA\s*:\s*(\d+)/i)) && !/ALERTA/i.test(line)) {
       const pct = +m[1];
       if (el.waterPct) el.waterPct.textContent = pct;
       if (el.waterFill) {
@@ -183,13 +183,13 @@
     }
 
     // --- Alerta de desbordamiento ---
-    if ((m = line.match(/AGUA_ALERTA:\s*([01])/i))) {
+    if ((m = line.match(/ALERTA\s*:\s*([01])/i))) {
       if (m[1] === "1") showAlert("ALERTA: el tanque se va a desbordar");
       else hideAlert();
     }
 
-    // --- PIR ---
-    if ((m = line.match(/PIR:\s*([01])/i))) {
+    // --- PIR ---  (IR: tolera perder la 'P')
+    if ((m = line.match(/\bP?IR\s*:\s*([01])/i))) {
       const mov = m[1] === "1";
       el.pirState.textContent = mov ? "MOVIMIENTO DETECTADO" : "Sin movimiento";
       el.pirDot.classList.toggle("pir__dot--active", mov);
@@ -200,18 +200,18 @@
       }
     }
 
-    // --- LDR ---
-    if ((m = line.match(/LDR:\s*([01])/i))) {
+    // --- LDR ---  (DR: tolera perder la 'L'; no confundir con LUZAUTO)
+    if ((m = line.match(/\bL?DR\s*:\s*([01])/i))) {
       el.ldrState.textContent = m[1] === "1" ? "Poca luz" : "Luz suficiente";
     }
 
-    // --- LED automatico ---
-    if ((m = line.match(/LUZAUTO:\s*([01])/i))) {
+    // --- LED automatico ---  (UZAUTO: tolera perder la 'L')
+    if ((m = line.match(/UZAUTO\s*:\s*([01])/i))) {
       el.luzAutoState.textContent = m[1] === "1" ? "Encendido" : "Apagado";
     }
 
-    // --- ACK de LED ---
-    if ((m = line.match(/ACK,\s*L,\s*(\d+),\s*([01])/i))) {
+    // --- ACK de LED ---  (CK,L tolera perder la 'A')
+    if ((m = line.match(/CK\s*,\s*L\s*,\s*(\d+)\s*,\s*([01])/i))) {
       const n = +m[1];
       if (n >= 1 && n <= NUM_LEDS) {
         ledState[n - 1] = m[2] === "1";
@@ -219,15 +219,15 @@
       }
     }
 
-    // --- ACK de servo ---
-    if ((m = line.match(/ACK,\s*P,\s*([12]),\s*([01])/i))) {
+    // --- ACK de servo ---  (CK,P tolera perder la 'A')
+    if ((m = line.match(/CK\s*,\s*P\s*,\s*([12])\s*,\s*([01])/i))) {
       const estado = m[2] === "1" ? "Abierta" : "Cerrada";
       if (m[1] === "1") el.door1State.textContent = estado;
       else el.door2State.textContent = estado;
     }
 
-    // --- ACK de modo auto ---
-    if ((m = line.match(/ACK,\s*AUTO,\s*([01])/i))) {
+    // --- ACK de modo auto ---  (CK,AUTO tolera perder la 'A')
+    if ((m = line.match(/CK\s*,\s*AUTO\s*,\s*([01])/i))) {
       el.autoToggle.checked = m[1] === "1";
     }
   }
